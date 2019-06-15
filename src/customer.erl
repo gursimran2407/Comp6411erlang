@@ -10,4 +10,16 @@
 -author("gursimransingh").
 
 %% API
--export([]).
+-export([custListener/0]).
+
+
+custListener()->
+  receive
+    { printGeneralMessage, Sender, Msq} ->
+      master! {printmessage, [Msq]},
+      custListener();
+    {customerDuty, Sender, {Customer,BankData, Resource}} ->
+      master! {printmessageCust, Sender, {Customer,BankData, Resource} }
+  after 2000->
+    ok
+  end.

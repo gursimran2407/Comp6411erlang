@@ -13,18 +13,35 @@
 -export([start/0]).
 
 start()->
+
   CustData = printCustFile(),
   io:fwrite("\n"),
   BankData = printBankFile(),
-  runBanks(BankData).
+  MasterPID = self(),
+  register(master, MasterPID ),
+  runBanks(BankData),
+  runCust(CustData, BankData).
 
 
 runBanks(BankData)->
   lists:foreach(fun(Element) -> {Bank, Resource} = Element,
-  register(Bank, spawn(bank, bankListener, []))
+    Pid = spawn(bank, bankListener, []),
+    register(Bank, Pid),
+    Pid ! {bankDuty, self(), {Resource}}
                 end,BankData),
 
   get_feedback().
+
+
+runCust(CustData, BankData)->
+  lists:foreach(fun(Element) -> {Customer, Resource} = Element,
+    Pid = spawn(customer, custListener, []),
+    register(Customer, Pid),
+    Pid ! {customerDuty, self(), {Customer,BankData, Resource}}
+                end,CustData),
+
+  get_feedback().
+
 
 
 
@@ -49,6 +66,12 @@ printCustFile()->
 
 get_feedback() ->
   receive
-    {Msg} ->
-      io:fwrite("Msg in get_feedback ~s \n\n", [Msg])
+    {printmessage, Msg} ->
+      io:fwrite("Msg in get_feedback ~s \n", [Msg]),
+      get_feedback();
+    {printmessageCust,  Sender, {Customer,BankData, Resource}} ->
+      io:fwrite("Msg in get_feedback : Customer process created Sender: ~w  Customer: ~w Banks: ~w , ResourceCust: ~w\n", [Sender,Customer,BankData, Resource]),
+      get_feedback()
+  after 1500 -> true,
+    io:fwrite ("~s~n", ["Master has received no reply for 1.5 seconds, ending...." ])
   end.

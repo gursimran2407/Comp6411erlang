@@ -15,9 +15,13 @@
 
 bankListener()->
   receive
-    {Sender, Msq} ->
-      io:fwrite("Heya ~w",[Msq] ),
-      Sender! "Thanks for the message"
+    {printGeneralMessage, Sender, Msg} ->
+      master! {printmessage, [Msg]},
+      bankListener():
+      {bankDuty, Sender, {Resource}} ->
+
   after 2000->
     ok
   end.
+
+
