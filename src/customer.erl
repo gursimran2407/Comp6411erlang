@@ -10,16 +10,20 @@
 -author("gursimransingh").
 
 %% API
--export([custListener/0]).
+-export([custListener/3]).
 
 
-custListener()->
+custListener(Resource,BankList, CustomerName)->
   receive
-    { printGeneralMessage, Sender, Msq} ->
-      master! {printmessage, [Msq]},
-      custListener();
-    {customerDuty, Sender, {Customer,BankData, Resource}} ->
-      master! {printmessageCust, Sender, {Customer,BankData, Resource} }
+    {customerDuty, Sender} ->
+      Sender! {printmessageCust, Sender, {CustomerName,BankList, Resource} },
+      RandomBank = lists:nth(rand:uniform(length(BankList)),BankList),
+      RandomAmount = rand:uniform(50),
+      Pid = whereis(RandomBank),
+      timer:sleep(rand:uniform(10) * rand:uniform(10)),
+      Pid ! {loanSanction, self(), {RandomAmount, CustomerName}},
+      custListener(Resource,BankList,CustomerName)
   after 2000->
     ok
   end.
+

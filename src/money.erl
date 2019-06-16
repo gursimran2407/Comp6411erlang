@@ -13,44 +13,54 @@
 -export([start/0]).
 
 start()->
-
+  register(masterProcess, self()),
   CustData = printCustFile(),
   io:fwrite("\n"),
   BankData = printBankFile(),
-  MasterPID = self(),
-  register(master, MasterPID ),
-  runBanks(BankData),
-  runCust(CustData, BankData).
 
+  BankMap = element(2,file:consult("banks.txt")),
+  BankRecords = maps:from_list(BankMap),
+  BankMapKeys = maps:keys(BankRecords),
+%%  io:fwrite("~w",[BankMapKeys]),
+%%  O =isList(BankMapKeys),
+%%  io:fwrite("~w",[O]),
+
+  runBanks(BankData),
+  runCust(CustData, BankMapKeys).
+
+
+%%isList(List)->
+%%  if
+%%  is_list(List)-> true;
+%%    true ->
+%%      false
+%%  end.
 
 runBanks(BankData)->
   lists:foreach(fun(Element) -> {Bank, Resource} = Element,
-    Pid = spawn(bank, bankListener, []),
+    Pid = spawn(bank, bankListener, [Bank, Resource]),
     register(Bank, Pid),
-    Pid ! {bankDuty, self(), {Resource}}
+    Pid ! {bankDuty, self()}
                 end,BankData),
 
   get_feedback().
 
 
-runCust(CustData, BankData)->
+runCust(CustData, BankMapKeys) ->
   lists:foreach(fun(Element) -> {Customer, Resource} = Element,
-    Pid = spawn(customer, custListener, []),
+    Pid = spawn(customer, custListener, [Resource, BankMapKeys, Customer]),
     register(Customer, Pid),
-    Pid ! {customerDuty, self(), {Customer,BankData, Resource}}
+    Pid ! {customerDuty, self()}
                 end,CustData),
 
   get_feedback().
 
 
-
-
-
 printBankFile()->
   {ok, BankTxt } = file:consult("banks.txt"),
   io:fwrite("** Banks and financial resources ** ~n"),
-  lists:foreach(fun(Element) -> {Bank,Resourse}=Element ,
-    {io:fwrite (" ~p:~p ~n", [Bank,Resourse])}
+  lists:foreach(fun(Element) -> {Bank, Resource} = Element ,
+    {io:fwrite (" ~p:~p ~n", [Bank, Resource])}
                 end,BankTxt),BankTxt.
 
 
@@ -71,6 +81,12 @@ get_feedback() ->
       get_feedback();
     {printmessageCust,  Sender, {Customer,BankData, Resource}} ->
       io:fwrite("Msg in get_feedback : Customer process created Sender: ~w  Customer: ~w Banks: ~w , ResourceCust: ~w\n", [Sender,Customer,BankData, Resource]),
+      get_feedback();
+    {printmessageCustomerLoanRequest,  Sender, {Customer,Amount, BankName}} ->
+      io:fwrite("Msg in get_feedback : ~s requests a loan of ~w dollar(s) from ~s\n", [Customer,Amount, BankName]),
+      get_feedback();
+    {printmessageBank,  Sender, {Bank, Resource}} ->
+      io:fwrite("Msg in get_feedback : Bank process created Sender: ~w  Bank: ~w , ResourceBank: ~w\n", [Sender,Bank, Resource]),
       get_feedback()
   after 1500 -> true,
     io:fwrite ("~s~n", ["Master has received no reply for 1.5 seconds, ending...." ])

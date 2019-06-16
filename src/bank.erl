@@ -10,18 +10,30 @@
 -author("gursimransingh").
 
 %% API
--export([bankListener/0]).
+-export([bankListener/2]).
 
 
-bankListener()->
+bankListener(BankName, Resource)->
   receive
-    {printGeneralMessage, Sender, Msg} ->
-      master! {printmessage, [Msg]},
-      bankListener():
-      {bankDuty, Sender, {Resource}} ->
 
+      {bankDuty, Sender} ->
+      Sender! {printmessageBank, Sender,{BankName, Resource}},
+        bankListener(BankName, Resource);
+
+      {loanSanction, Sender, {Amount, CustomerName}} ->
+      masterProcess ! {printmessageCustomerLoanRequest,Sender, {CustomerName, Amount, BankName}},
+      bankListener(BankName, Resource)
   after 2000->
     ok
   end.
 
 
+loanDecision(LoanAmount, BankResource) ->
+  if
+    LoanAmount =< BankResource ->
+      true
+    ;
+    true ->
+      false
+  end.
+  
