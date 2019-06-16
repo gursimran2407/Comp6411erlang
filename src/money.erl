@@ -38,9 +38,8 @@ start()->
 
 runBanks(BankData)->
   lists:foreach(fun(Element) -> {Bank, Resource} = Element,
-    Pid = spawn(bank, bankListener, [Bank, Resource]),
+    Pid = spawn(bank, bankListener, [Bank, Resource, self()]),
     register(Bank, Pid)
-    %Pid ! {bankDuty, self()}
                 end,BankData),
 
   get_feedback().
@@ -48,7 +47,7 @@ runBanks(BankData)->
 
 runCust(CustData, BankMapKeys) ->
   lists:foreach(fun(Element) -> {Customer, Resource} = Element,
-    Pid = spawn(customer, custListener, [Resource, BankMapKeys, Customer]),
+    Pid = spawn(customer, custListener, [Resource, Resource, BankMapKeys, Customer, self()]),
     register(Customer, Pid),
     Pid ! {customerDuty}
                 end,CustData),
@@ -77,17 +76,17 @@ printCustFile()->
 get_feedback() ->
   receive
 
-%%    {printmessageCust,  Sender, {Customer,BankData, Resource}} ->
-%%      io:fwrite("Msg in get_feedback : Customer process created Sender: ~w  Customer: ~w Banks: ~w , ResourceCust: ~w\n", [Sender,Customer,BankData, Resource]),
-%%      get_feedback();
+    {printmessageCust,  Sender, {Customer,BankData, Resource}} ->
+      io:fwrite("Msg in get_feedback : Customer process created Sender: ~w  Customer: ~w Banks: ~w , ResourceCust: ~w\n", [Sender,Customer,BankData, Resource]),
+      get_feedback();
     {printmessageCustomerLoanRequest,  {Customer,Amount, BankName}} ->
-      io:fwrite("Msg in get_feedback : ~s requests a loan of ~w dollar(s) from ~s\n", [Customer,Amount, BankName]),
+      io:fwrite(" ~s requests a loan of ~w dollar(s) from ~s\n", [Customer,Amount, BankName]),
       get_feedback();
     {printmessageCustomerLoanApproval,  {Customer,Amount, BankName}} ->
-      io:fwrite("Msg in get_feedback : ~s approves a loan of ~w dollar(s) from ~s\n", [BankName,Amount, Customer]),
+      io:fwrite(" ~s approves a loan of ~w dollar(s) from ~s\n", [BankName,Amount, Customer]),
       get_feedback();
     {printmessageCustomerLoanDeny,  {Customer,Amount, BankName}} ->
-      io:fwrite("Msg in get_feedback : ~s denies a loan of ~w dollar(s) from ~s\n", [BankName,Amount, Customer]),
+      io:fwrite(" ~s denies a loan of ~w dollar(s) from ~s\n", [BankName,Amount, Customer]),
       get_feedback();
 %%    {printmessageBank,  Sender, {Bank, Resource}} ->
 %%      io:fwrite("Msg in get_feedback : Bank process created Sender: ~w  Bank: ~w , ResourceBank: ~w\n", [Sender,Bank, Resource]),

@@ -10,10 +10,10 @@
 -author("gursimransingh").
 
 %% API
--export([bankListener/2]).
+-export([bankListener/3]).
 
 
-bankListener(BankName, Resource)->
+bankListener(BankName, Resource, Master)->
   timer:sleep(100),
   receive
 
@@ -22,26 +22,26 @@ bankListener(BankName, Resource)->
         MasterPid ! {printmessageCustomerLoanRequest, {CustomerName, Amount, BankName}},
         Pid = whereis(CustomerName),
         if
-          (Amount < Resource) and (Resource>0) ->
+          (Resource>0) and (Resource>Amount)->
 
             timer:sleep(100),
-            Pid ! {loanResult, ok, Amount, BankName},
-
+            Pid ! {loanResult, ok, Amount, BankName, MasterPid},
             Pid ! {customerDuty},
-            bankListener(BankName, (Resource-Amount));
+            bankListener(BankName, (Resource-Amount), Master);
 
             true ->
+              Pid !{loanResult, false, Amount, BankName, MasterPid},
               Pid ! {customerDuty},
-              Pid !{loanResult, false, Amount, BankName},
 
-              MasterPid ! {printmessageBankDollarsRemaining, {BankName, Resource}}
+              bankListener(BankName, Resource, Master)
+        end
 
-        end,
-        bankListener(BankName, Resource)
+
 
   after 2000->
-    ok
-end.
+    Master ! {printmessageBankDollarsRemaining, {BankName, Resource}}
+
+  end.
 
 
   
