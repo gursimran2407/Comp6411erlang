@@ -10,52 +10,53 @@
 -author("gursimransingh").
 
 %% API
--export([custListener/5]).
+-export([custListener/6]).
 
 
-custListener(InitialResource, Resource,BankList, CustomerName, Master)->
+custListener(InitialResource, Resource,BankList, CustomerName, Master, LoanGathered)->
   timer:sleep(100),
   receive
     {customerDuty} ->
+
       if
         (length(BankList) /= 0)  and (Resource > 0)->
-         Master! {printmessageCust, self(),{CustomerName,BankList, Resource} },
-
+%%         Master! {printmessageCust, self(),{CustomerName,BankList, Resource} },
           RandomBank = lists:nth(rand:uniform(length(BankList)),BankList),
+
           RandomAmount = rand:uniform(50),
           Pid = whereis(RandomBank),
           timer:sleep(rand:uniform(100) * rand:uniform(10) ),
 
-          Pid ! {loanSanction, {RandomAmount, CustomerName, Master}},
-          custListener(InitialResource,Resource,BankList,CustomerName, Master);
+          Pid ! {loanSanction, {RandomAmount, CustomerName}},
+          custListener(InitialResource,Resource,BankList,CustomerName, Master,LoanGathered);
 
         true ->
           if
-            (Resource == 0) ->
-              Master ! {printmessageCustomerObjectiveReached, {CustomerName, InitialResource}};
+            (InitialResource == LoanGathered) ->
+              Master ! {printmessageCustomerObjectiveReached, {CustomerName, LoanGathered}};
 
             true ->
-              Master ! {printmessageCustomerObjectiveNotReached, {CustomerName, Resource}}
+              Master ! {printmessageCustomerObjectiveNotReached, {CustomerName, LoanGathered}}
 
           end
       end;
 
 
 
-    {loanResult, LoanResult, RandomAmount, BankName, MasterPid} ->
+    {loanResult, LoanResult, RandomAmount, BankName} ->
 
 
       if
-        LoanResult == ok ->
-          MasterPid ! {printmessageCustomerLoanApproval, {CustomerName, RandomAmount, BankName} },
+        LoanResult == true ->
+          Master ! {printmessageCustomerLoanApproval, {CustomerName, RandomAmount, BankName} },
           NewResource = (Resource-RandomAmount),
+          LoanAmount = RandomAmount+LoanGathered,
+          custListener(InitialResource,NewResource, BankList, CustomerName,Master,LoanAmount);
 
-          custListener(InitialResource,NewResource, BankList, CustomerName,Master);
-
-        true ->
-          MasterPid ! {printmessageCustomerLoanDeny, {CustomerName, RandomAmount, BankName} },
+        LoanResult == false ->
+          Master ! {printmessageCustomerLoanDeny, {CustomerName, RandomAmount, BankName} },
           NewList = lists:delete(BankName,BankList),
-          custListener(InitialResource,Resource, NewList, CustomerName,Master)
+          custListener(InitialResource,Resource, NewList, CustomerName,Master,LoanGathered)
 
       end
   after 2000->

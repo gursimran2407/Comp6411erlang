@@ -13,7 +13,7 @@
 -export([start/0]).
 
 start()->
-  register(masterProcess, self()),
+  %register(masterProcess, self()),
   CustData = printCustFile(),
   io:fwrite("\n"),
   BankData = printBankFile(),
@@ -47,7 +47,7 @@ runBanks(BankData)->
 
 runCust(CustData, BankMapKeys) ->
   lists:foreach(fun(Element) -> {Customer, Resource} = Element,
-    Pid = spawn(customer, custListener, [Resource, Resource, BankMapKeys, Customer, self()]),
+    Pid = spawn(customer, custListener, [Resource, Resource, BankMapKeys, Customer, self(),0]),
     register(Customer, Pid),
     Pid ! {customerDuty}
                 end,CustData),
@@ -88,9 +88,9 @@ get_feedback() ->
     {printmessageCustomerLoanDeny,  {Customer,Amount, BankName}} ->
       io:fwrite(" ~s denies a loan of ~w dollar(s) from ~s\n", [BankName,Amount, Customer]),
       get_feedback();
-%%    {printmessageBank,  Sender, {Bank, Resource}} ->
-%%      io:fwrite("Msg in get_feedback : Bank process created Sender: ~w  Bank: ~w , ResourceBank: ~w\n", [Sender,Bank, Resource]),
-%%      get_feedback()
+    {printmessageBank,  {Bank, Resource}} ->
+      io:fwrite("Msg in get_feedback : Bank process created Sender:  Bank: ~w , ResourceBank: ~w\n", [Bank, Resource]),
+      get_feedback();
     {printmessageCustomerObjectiveReached, {CustomerName,Resource}} ->
       io:fwrite("~s has reached the objective of ~w dollars(s). Woo Hoo! ~n",[CustomerName, Resource]),
       get_feedback();
@@ -100,6 +100,6 @@ get_feedback() ->
     {printmessageBankDollarsRemaining, {BankName,Resource}} ->
       io:fwrite("~s has ~w dollar(s) remaining. ~n",[BankName, Resource]),
       get_feedback()
-  after 500 -> true,
-    ok
+  after 1500 ->
+    io:fwrite("CHANGA")
   end.

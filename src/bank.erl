@@ -18,19 +18,21 @@ bankListener(BankName, Resource, Master)->
   receive
 
 
-      {loanSanction, {Amount, CustomerName, MasterPid}} ->
-        MasterPid ! {printmessageCustomerLoanRequest, {CustomerName, Amount, BankName}},
+      {loanSanction, {Amount, CustomerName}} ->
+        Master! {printmessageCustomerLoanRequest, {CustomerName, Amount, BankName}},
         Pid = whereis(CustomerName),
+        Master ! {printmessageBank,[{BankName, Resource}]}
+        ,
         if
-          (Resource>0) and (Resource>Amount)->
+          (Resource>=0) and (Amount < Resource)->
 
             timer:sleep(100),
-            Pid ! {loanResult, ok, Amount, BankName, MasterPid},
+            Pid ! {loanResult, true, Amount, BankName},
             Pid ! {customerDuty},
             bankListener(BankName, (Resource-Amount), Master);
 
-            true ->
-              Pid !{loanResult, false, Amount, BankName, MasterPid},
+          true ->
+              Pid !{loanResult, false, Amount, BankName},
               Pid ! {customerDuty},
 
               bankListener(BankName, Resource, Master)
@@ -38,8 +40,10 @@ bankListener(BankName, Resource, Master)->
 
 
 
-  after 2000->
-    Master ! {printmessageBankDollarsRemaining, {BankName, Resource}}
+  after 6000->
+    Master ! {printmessageBankDollarsRemaining, {BankName, Resource}},
+    io:fwrite("~s has ~w dollar(s) remaining. ~n",[BankName, Resource])
+
 
   end.
 
