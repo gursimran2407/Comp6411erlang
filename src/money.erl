@@ -50,7 +50,7 @@ runCust(CustData, BankMapKeys) ->
   lists:foreach(fun(Element) -> {Customer, Resource} = Element,
     Pid = spawn(customer, custListener, [Resource, BankMapKeys, Customer]),
     register(Customer, Pid),
-    Pid ! {customerDuty, self()}
+    Pid ! {customerDuty}
                 end,CustData),
 
   get_feedback().

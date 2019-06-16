@@ -14,24 +14,33 @@
 
 
 bankListener(BankName, Resource)->
+  timer:sleep(100),
   receive
 
 
-      {loanSanction, Sender, {Amount, CustomerName}} ->
-      masterProcess ! {printmessageCustomerLoanRequest, {CustomerName, Amount, BankName}},
-
+      {loanSanction, {Amount, CustomerName, MasterPid}} ->
+        MasterPid ! {printmessageCustomerLoanRequest, {CustomerName, Amount, BankName}},
+        Pid = whereis(CustomerName),
         if
           (Amount < Resource) and (Resource>0) ->
-            Pid = whereis(CustomerName),
+
             timer:sleep(100),
             Pid ! {loanResult, ok, Amount, BankName},
+
+            Pid ! {customerDuty},
             bankListener(BankName, (Resource-Amount));
-          true ->
-            bankListener(BankName, Resource)
+
+            true ->
+              Pid ! {customerDuty},
+              Pid !{loanResult, false, Amount, BankName},
+
+              MasterPid ! {printmessageBankDollarsRemaining, {BankName, Resource}}
+
         end,
-    bankListener(BankName, Resource)
+        bankListener(BankName, Resource)
+
   after 2000->
-    masterProcess ! {printmessageBankDollarsRemaining, {BankName, Resource}}
+    ok
 end.
 
 

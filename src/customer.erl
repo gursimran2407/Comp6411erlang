@@ -14,37 +14,35 @@
 
 
 custListener(Resource,BankList, CustomerName)->
+  timer:sleep(100),
   receive
-    {customerDuty, Sender} ->
-
+    {customerDuty} ->
+      MasterPid = whereis(masterProcess),
       if
         (Resource ==0) and (length(BankList)==0) ->
-          masterProcess ! {printmessageCustomerObjectiveReached, {CustomerName, Resource}};
+          MasterPid ! {printmessageCustomerObjectiveReached, {CustomerName, Resource}};
         (length(BankList)==0) ->
-          masterProcess ! {printmessageCustomerObjectiveNotReached, {CustomerName, Resource}};
+          MasterPid ! {printmessageCustomerObjectiveNotReached, {CustomerName, Resource}};
+
         true ->
-          ok
-          end,
-
-
-      %masterProcess! {printmessageCust, Sender, {CustomerName,BankList, Resource} },
-      RandomBank = lists:nth(rand:uniform(length(BankList)),BankList),
-      RandomAmount = rand:uniform(50),
-      Pid = whereis(RandomBank),
-      timer:sleep(rand:uniform(10) * rand:uniform(10)),
-      Pid ! {loanSanction, self(), {RandomAmount, CustomerName}},
-      custListener(Resource,BankList,CustomerName);
+          %masterProcess! {printmessageCust, Sender, {CustomerName,BankList, Resource} },
+          RandomBank = lists:nth(rand:uniform(length(BankList)),BankList),
+          RandomAmount = rand:uniform(50),
+          Pid = whereis(RandomBank),
+          timer:sleep(rand:uniform(100)),
+          Pid ! {loanSanction, {RandomAmount, CustomerName, MasterPid}},
+          custListener(Resource,BankList,CustomerName)
+          end;
 
     {loanResult, LoanResult, RandomAmount, BankName} ->
+      MasterPid = whereis(masterProcess),
 
       if
         LoanResult == ok ->
-          masterProcess ! {printmessageCustomerLoanApproval, {CustomerName, RandomAmount, BankName} },
-          %self()!{customerDuty,self()},
+          MasterPid ! {printmessageCustomerLoanApproval, {CustomerName, RandomAmount, BankName} },
           custListener((Resource-RandomAmount), BankList, CustomerName);
         true ->
-          masterProcess ! {printmessageCustomerLoanDeny, {CustomerName, RandomAmount, BankName} },
-          %self()!{customerDuty,self()},
+          MasterPid ! {printmessageCustomerLoanDeny, {CustomerName, RandomAmount, BankName} },
           custListener(Resource, lists:delete(BankName,BankList), CustomerName)
       end,
       custListener(Resource, BankList, CustomerName)
