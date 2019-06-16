@@ -39,8 +39,8 @@ start()->
 runBanks(BankData)->
   lists:foreach(fun(Element) -> {Bank, Resource} = Element,
     Pid = spawn(bank, bankListener, [Bank, Resource]),
-    register(Bank, Pid),
-    Pid ! {bankDuty, self()}
+    register(Bank, Pid)
+    %Pid ! {bankDuty, self()}
                 end,BankData),
 
   get_feedback().
@@ -76,18 +76,31 @@ printCustFile()->
 
 get_feedback() ->
   receive
-    {printmessage, Msg} ->
-      io:fwrite("Msg in get_feedback ~s \n", [Msg]),
-      get_feedback();
-    {printmessageCust,  Sender, {Customer,BankData, Resource}} ->
-      io:fwrite("Msg in get_feedback : Customer process created Sender: ~w  Customer: ~w Banks: ~w , ResourceCust: ~w\n", [Sender,Customer,BankData, Resource]),
-      get_feedback();
-    {printmessageCustomerLoanRequest,  Sender, {Customer,Amount, BankName}} ->
+
+%%    {printmessageCust,  Sender, {Customer,BankData, Resource}} ->
+%%      io:fwrite("Msg in get_feedback : Customer process created Sender: ~w  Customer: ~w Banks: ~w , ResourceCust: ~w\n", [Sender,Customer,BankData, Resource]),
+%%      get_feedback();
+    {printmessageCustomerLoanRequest,  {Customer,Amount, BankName}} ->
       io:fwrite("Msg in get_feedback : ~s requests a loan of ~w dollar(s) from ~s\n", [Customer,Amount, BankName]),
       get_feedback();
-    {printmessageBank,  Sender, {Bank, Resource}} ->
-      io:fwrite("Msg in get_feedback : Bank process created Sender: ~w  Bank: ~w , ResourceBank: ~w\n", [Sender,Bank, Resource]),
+    {printmessageCustomerLoanApproval,  {Customer,Amount, BankName}} ->
+      io:fwrite("Msg in get_feedback : ~s approves a loan of ~w dollar(s) from ~s\n", [BankName,Amount, Customer]),
+      get_feedback();
+    {printmessageCustomerLoanDeny,  {Customer,Amount, BankName}} ->
+      io:fwrite("Msg in get_feedback : ~s denies a loan of ~w dollar(s) from ~s\n", [BankName,Amount, Customer]),
+      get_feedback();
+%%    {printmessageBank,  Sender, {Bank, Resource}} ->
+%%      io:fwrite("Msg in get_feedback : Bank process created Sender: ~w  Bank: ~w , ResourceBank: ~w\n", [Sender,Bank, Resource]),
+%%      get_feedback()
+    {printmessageCustomerObjectiveReached, {CustomerName,Resource}} ->
+      io:fwrite("~s has reached the objective of ~w dollars(s). Woo Hoo! ~n",[CustomerName, Resource]),
+      get_feedback();
+    {printmessageCustomerObjectiveNotReached,   {CustomerName,Resource}} ->
+      io:fwrite("~s was only able to borrow ~w dollars(s). Boo Hoo! ~n",[CustomerName, Resource]),
+      get_feedback();
+    {printmessageBankDollarsRemaining, {BankName,Resource}} ->
+      io:fwrite("~s has ~w dollar(s) remaining. ~n",[BankName, Resource]),
       get_feedback()
-  after 1500 -> true,
-    io:fwrite ("~s~n", ["Master has received no reply for 1.5 seconds, ending...." ])
+  after 500 -> true,
+    ok
   end.

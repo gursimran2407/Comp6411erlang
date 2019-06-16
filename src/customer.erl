@@ -16,14 +16,39 @@
 custListener(Resource,BankList, CustomerName)->
   receive
     {customerDuty, Sender} ->
-      Sender! {printmessageCust, Sender, {CustomerName,BankList, Resource} },
+
+      if
+        (Resource ==0) and (length(BankList)==0) ->
+          masterProcess ! {printmessageCustomerObjectiveReached, {CustomerName, Resource}};
+        (length(BankList)==0) ->
+          masterProcess ! {printmessageCustomerObjectiveNotReached, {CustomerName, Resource}};
+        true ->
+          ok
+          end,
+
+
+      %masterProcess! {printmessageCust, Sender, {CustomerName,BankList, Resource} },
       RandomBank = lists:nth(rand:uniform(length(BankList)),BankList),
       RandomAmount = rand:uniform(50),
       Pid = whereis(RandomBank),
       timer:sleep(rand:uniform(10) * rand:uniform(10)),
       Pid ! {loanSanction, self(), {RandomAmount, CustomerName}},
-      custListener(Resource,BankList,CustomerName)
+      custListener(Resource,BankList,CustomerName);
+
+    {loanResult, LoanResult, RandomAmount, BankName} ->
+
+      if
+        LoanResult == ok ->
+          masterProcess ! {printmessageCustomerLoanApproval, {CustomerName, RandomAmount, BankName} },
+          %self()!{customerDuty,self()},
+          custListener((Resource-RandomAmount), BankList, CustomerName);
+        true ->
+          masterProcess ! {printmessageCustomerLoanDeny, {CustomerName, RandomAmount, BankName} },
+          %self()!{customerDuty,self()},
+          custListener(Resource, lists:delete(BankName,BankList), CustomerName)
+      end,
+      custListener(Resource, BankList, CustomerName)
   after 2000->
-    ok
+  ok
   end.
 
