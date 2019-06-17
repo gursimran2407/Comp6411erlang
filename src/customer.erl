@@ -23,7 +23,8 @@ custListener(InitialResource, Resource,BankList, CustomerName, Master, LoanGathe
 %%         Master! {printmessageCust, self(),{CustomerName,BankList, Resource} },
           RandomBank = lists:nth(rand:uniform(length(BankList)),BankList),
 
-          RandomAmount = rand:uniform(50),
+%%          RandomAmount = rand:uniform(50),
+          RandomAmount = min(rand:uniform(Resource),rand:uniform(50)),
           Pid = whereis(RandomBank),
           timer:sleep(rand:uniform(100) * rand:uniform(10) ),
 

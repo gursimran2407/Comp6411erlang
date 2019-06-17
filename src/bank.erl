@@ -26,7 +26,7 @@ bankListener(BankName, Resource, Master)->
         if
           (Resource>=0) and (Amount < Resource)->
 
-            timer:sleep(100),
+%%            timer:sleep(100),
             Pid ! {loanResult, true, Amount, BankName},
             Pid ! {customerDuty},
             bankListener(BankName, (Resource-Amount), Master);
@@ -40,7 +40,7 @@ bankListener(BankName, Resource, Master)->
 
 
 
-  after 6000->
+  after 4000->
     Master ! {printmessageBankDollarsRemaining, {BankName, Resource}},
     io:fwrite("~s has ~w dollar(s) remaining. ~n",[BankName, Resource])
 

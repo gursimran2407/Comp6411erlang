@@ -101,5 +101,5 @@ get_feedback() ->
       io:fwrite("~s has ~w dollar(s) remaining. ~n",[BankName, Resource]),
       get_feedback()
   after 1500 ->
-    io:fwrite("CHANGA")
+    ok
   end.
