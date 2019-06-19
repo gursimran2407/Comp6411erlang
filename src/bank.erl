@@ -34,16 +34,13 @@ bankListener(BankName, Resource, Master)->
           true ->
               Pid !{loanResult, false, Amount, BankName},
               Pid ! {customerDuty},
-
               bankListener(BankName, Resource, Master)
         end
 
 
 
   after 4000->
-    Master ! {printmessageBankDollarsRemaining, {BankName, Resource}}
-
-
+  Master ! {printmessageBankDollarsRemaining, {BankName, Resource}}
   end.
 
 

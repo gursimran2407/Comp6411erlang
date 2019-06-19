@@ -2,3 +2,7 @@
 {bmo,700}.
 {inc,200}.
 {scotia,179}.
+{td,600}.
+{tangrine,300}.
+{tang,100}.
+{rine,600}.
