@@ -26,7 +26,7 @@ custListener(InitialResource, Resource,BankList, CustomerName, Master, LoanGathe
 %%          RandomAmount = rand:uniform(50),
           RandomAmount = min(rand:uniform(Resource),rand:uniform(50)),
           Pid = whereis(RandomBank),
-          timer:sleep(rand:uniform(100) * rand:uniform(10) ),
+          timer:sleep(max(rand:uniform(100), rand:uniform(10)) ),
 
           Pid ! {loanSanction, {RandomAmount, CustomerName}},
           custListener(InitialResource,Resource,BankList,CustomerName, Master,LoanGathered);

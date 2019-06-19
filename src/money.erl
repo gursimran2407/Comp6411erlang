@@ -17,7 +17,9 @@ start()->
   CustData = printCustFile(),
   io:fwrite("\n"),
   BankData = printBankFile(),
-
+  M1 = [],
+  M2 = [],
+  B1 = [],
   BankMap = element(2,file:consult("banks.txt")),
   BankRecords = maps:from_list(BankMap),
   BankMapKeys = maps:keys(BankRecords),
@@ -25,8 +27,8 @@ start()->
 %%  O =isList(BankMapKeys),
 %%  io:fwrite("~w",[O]),
 
-  runBanks(BankData),
-  runCust(CustData, BankMapKeys).
+  runBanks(BankData, M1, M2, B1),
+  runCust(CustData, BankMapKeys, M1, M2,B1).
 
 
 %%isList(List)->
@@ -36,23 +38,24 @@ start()->
 %%      false
 %%  end.
 
-runBanks(BankData)->
+runBanks(BankData, M1, M2, B1)->
+
   lists:foreach(fun(Element) -> {Bank, Resource} = Element,
     Pid = spawn(bank, bankListener, [Bank, Resource, self()]),
     register(Bank, Pid)
                 end,BankData),
 
-  get_feedback().
+  get_feedback(M1, M2, B1).
 
 
-runCust(CustData, BankMapKeys) ->
+runCust(CustData, BankMapKeys, M1, M2,B1) ->
   lists:foreach(fun(Element) -> {Customer, Resource} = Element,
     Pid = spawn(customer, custListener, [Resource, Resource, BankMapKeys, Customer, self(),0]),
     register(Customer, Pid),
     Pid ! {customerDuty}
                 end,CustData),
 
-  get_feedback().
+  get_feedback(M1, M2,B1).
 
 
 printBankFile()->
@@ -73,33 +76,41 @@ printCustFile()->
 
 
 
-get_feedback() ->
+get_feedback(M1, M2, B1) ->
   receive
 
     {printmessageCust,  Sender, {Customer,BankData, Resource}} ->
       io:fwrite("Msg in get_feedback : Customer process created Sender: ~w  Customer: ~w Banks: ~w , ResourceCust: ~w\n", [Sender,Customer,BankData, Resource]),
-      get_feedback();
+      get_feedback(M1, M2, B1);
     {printmessageCustomerLoanRequest,  {Customer,Amount, BankName}} ->
       io:fwrite(" ~s requests a loan of ~w dollar(s) from ~s\n", [Customer,Amount, BankName]),
-      get_feedback();
+      get_feedback(M1, M2, B1);
     {printmessageCustomerLoanApproval,  {Customer,Amount, BankName}} ->
       io:fwrite(" ~s approves a loan of ~w dollar(s) from ~s\n", [BankName,Amount, Customer]),
-      get_feedback();
+      get_feedback(M1, M2, B1);
     {printmessageCustomerLoanDeny,  {Customer,Amount, BankName}} ->
       io:fwrite(" ~s denies a loan of ~w dollar(s) from ~s\n", [BankName,Amount, Customer]),
-      get_feedback();
+      get_feedback(M1, M2, B1);
     {printmessageBank,  {Bank, Resource}} ->
       io:fwrite("Msg in get_feedback : Bank process created Sender:  Bank: ~w , ResourceBank: ~w\n", [Bank, Resource]),
-      get_feedback();
+      get_feedback(M1, M2, B1);
     {printmessageCustomerObjectiveReached, {CustomerName,Resource}} ->
-      io:fwrite("~s has reached the objective of ~w dollars(s). Woo Hoo! ~n",[CustomerName, Resource]),
-      get_feedback();
+      M1New = lists:append(M1, [{CustomerName,Resource}]),
+      get_feedback(M1New, M2, B1);
     {printmessageCustomerObjectiveNotReached,   {CustomerName,Resource}} ->
-      io:fwrite("~s was only able to borrow ~w dollars(s). Boo Hoo! ~n",[CustomerName, Resource]),
-      get_feedback();
+      M2New = lists:append(M2, [{CustomerName,Resource}]),
+      get_feedback(M1, M2New, B1);
     {printmessageBankDollarsRemaining, {BankName,Resource}} ->
-      io:fwrite("~s has ~w dollar(s) remaining. ~n",[BankName, Resource]),
-      get_feedback()
+      B1New = lists:append(B1, [{BankName,Resource}]),
+      get_feedback(M1,M2, B1New)
   after 1500 ->
-    ok
-  end.
+    lists:foreach(fun(Element)-> {Cust, Money} = Element,
+      io:fwrite("~s has reached the objective of ~w dollars(s). Woo Hoo! ~n",[Cust, Money])
+                  end,M1),
+    lists:foreach(fun(Element)-> {Cust, Money} = Element,
+      io:fwrite("~s was only able to borrow ~w dollars(s). Boo Hoo! ~n",[Cust, Money])
+                  end,M2),
+    lists:foreach(fun(Element)-> {Bank, Money} = Element,
+      io:fwrite("~s has ~w dollar(s) remaining. ~n",[Bank, Money])
+                  end,B1)
+      end.
