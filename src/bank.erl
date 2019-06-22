@@ -41,6 +41,8 @@ bankListener(BankName, Resource, Master)->
 
   after 4000->
   Master ! {printmessageBankDollarsRemaining, {BankName, Resource}}
+%%    io:fwrite("~s has ~w dollar(s) remaining. ~n",[BankName, Resource])
+
   end.
 
 

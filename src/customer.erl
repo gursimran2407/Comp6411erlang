@@ -20,7 +20,7 @@ custListener(InitialResource, Resource,BankList, CustomerName, Master, LoanGathe
 
       if
         (length(BankList) /= 0)  and (Resource > 0)->
-%%        Master! {printmessageCust, self(),{CustomerName,BankList, Resource} },
+%%      Master! {printmessageCust, self(),{CustomerName,BankList, Resource} },
           RandomBank = lists:nth(rand:uniform(length(BankList)),BankList),
 
           RandomAmount = min(rand:uniform(Resource),rand:uniform(50)),

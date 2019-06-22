@@ -1,8 +1,10 @@
 {rbc,800}.
-{bmo,700}.
-{inc,200}.
-{scotia,179}.
-{td,600}.
-{tangrine,300}.
+{tangrine,800}.
 {tang,100}.
 {rine,600}.
+{tangrrr,200}.
+{rinerrr,600}.
+{tang444,1000}.
+{rine444,600}.
+{tang3332,100}.
+{rine23323,600}.
