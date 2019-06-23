@@ -2,7 +2,7 @@
 %%% @author gursimransingh
 %%% @copyright (C) 2019, <COMPANY>
 %%% @doc
-%%%
+%%% University ID: 40080981
 %%% @end
 %%% Created : 15. Jun 2019 13:11
 %%%-------------------------------------------------------------------
@@ -30,7 +30,9 @@ custListener(InitialResource, Resource,BankList, CustomerName, Master, LoanGathe
           Pid ! {loanSanction, {RandomAmount, CustomerName}},
           custListener(InitialResource,Resource,BankList,CustomerName, Master,LoanGathered);
 
+
         true ->
+
           if
             (InitialResource == LoanGathered) ->
               Master ! {printmessageCustomerObjectiveReached, {CustomerName, LoanGathered}};

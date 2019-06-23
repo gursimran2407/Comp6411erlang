@@ -1,9 +1,9 @@
 {rbc,800}.
 {tangrine,800}.
-{tang,100}.
+{tang,920}.
 {rine,600}.
 {tangrrr,200}.
-{rinerrr,600}.
+{rinerrr,620}.
 {tang444,1000}.
 {rine444,600}.
 {tang3332,100}.

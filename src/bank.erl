@@ -2,7 +2,7 @@
 %%% @author gursimransingh
 %%% @copyright (C) 2019, <COMPANY>
 %%% @doc
-%%%
+%%% University ID: 40080981
 %%% @end
 %%% Created : 15. Jun 2019 13:12
 %%%-------------------------------------------------------------------
@@ -21,8 +21,8 @@ bankListener(BankName, Resource, Master)->
       {loanSanction, {Amount, CustomerName}} ->
         Master! {printmessageCustomerLoanRequest, {CustomerName, Amount, BankName}},
         Pid = whereis(CustomerName),
-        Master ! {printmessageBank,[{BankName, Resource}]}
-        ,
+%%        Master ! {printmessageBank,[{BankName, Resource}]}
+%%        ,
         if
           (Resource>=0) and (Amount < Resource)->
 
@@ -39,7 +39,7 @@ bankListener(BankName, Resource, Master)->
 
 
 
-  after 4000->
+  after 5000->
   Master ! {printmessageBankDollarsRemaining, {BankName, Resource}}
 %%    io:fwrite("~s has ~w dollar(s) remaining. ~n",[BankName, Resource])
 

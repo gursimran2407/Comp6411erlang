@@ -2,7 +2,7 @@
 %%% @author gursimransingh
 %%% @copyright (C) 2019, <COMPANY>
 %%% @doc
-%%%
+%%% University ID: 40080981
 %%% @end
 %%% Created : 14. Jun 2019 10:56
 %%%-------------------------------------------------------------------
@@ -102,7 +102,7 @@ get_feedback(M1, M2, B1) ->
     {printmessageBankDollarsRemaining, {BankName,Resource}} ->
       B1New = lists:append(B1, [{BankName,Resource}]),
       get_feedback(M1,M2, B1New)
-  after 4500 ->
+  after 6000 ->
     lists:foreach(fun(Element)-> {Cust, Money} = Element,
       io:fwrite("~s has reached the objective of ~w dollars(s). Woo Hoo! ~n",[Cust, Money])
                   end,M1),
